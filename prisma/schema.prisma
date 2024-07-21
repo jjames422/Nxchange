@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int                @id @default(autoincrement())
+  email             String             @unique
+  passwordHash      String
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  fiatBalance       Float              @default(0.0)
+  cryptoBalances    Json               @default("{}")
+  fiatTransactions  FiatTransaction[]
+  cryptoTransactions CryptoTransaction[]
+  wallets           Wallet[]
+  swiftTransfers    SWIFTTransfer[]
+  bankAccounts      BankAccount[]
+  name              String?
+  emailVerified     DateTime?
+  image             String?
+  accounts          Account[]
+  sessions          Session[]
+}
+
+model Wallet {
+  id              Int                @id @default(autoincrement())
+  userId          Int
+  type            String             // e.g., "fiat", "btc", "eth", etc.
+  address         String             @unique
+  balance         Float              @default(0.0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now())
+  user            User               @relation(fields: [userId], references: [id])
+  transactions    Transaction[]
+}
+
+model Transaction {
+  id              Int                @id @default(autoincrement())
+  walletId        Int
+  type            String             // e.g., "deposit", "withdrawal", "transfer", "conversion"
+  amount          Float
+  currency        String             // e.g., "USD", "BTC", "ETH"
+  status          String             // e.g., "pending", "completed", "failed"
+  referenceCode   String?            // For SWIFT transfer reference codes
+  createdAt       DateTime           @default(now())
+  wallet          Wallet             @relation(fields: [walletId], references: [id])
+}
+
+model FiatTransaction {
+  id              Int                @id @default(autoincrement())
+  userId          Int
+  amount          Float
+  currency        String             // Typically "USD"
+  type            String             // e.g., "deposit", "withdrawal"
+  status          String             // e.g., "pending", "completed", "failed"
+  referenceCode   String?            // For SWIFT transfer reference codes
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now())
+  user            User               @relation(fields: [userId], references: [id])
+}
+
+model CryptoTransaction {
+  id              Int                @id @default(autoincrement())
+  userId          Int
+  amount          Float
+  currency        String             // e.g., "BTC", "ETH"
+  type            String             // e.g., "buy", "sell", "transfer"
+  status          String             // e.g., "pending", "completed", "failed"
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now())
+  user            User               @relation(fields: [userId], references: [id])
+}
+
+model SWIFTTransfer {
+  id              Int                @id @default(autoincrement())
+  userId          Int
+  amount          Float
+  currency        String             // Typically "USD"
+  status          String             // e.g., "pending", "completed", "failed"
+  referenceCode   String?            // SWIFT transfer reference codes
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now())
+  user            User               @relation(fields: [userId], references: [id])
+}
+
+model BankAccount {
+  id              Int                @id @default(autoincrement())
+  userId          Int
+  bankName        String
+  accountNumber   String
+  routingNumber   String
+  swiftCode       String
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now())
+  user            User               @relation(fields: [userId], references: [id])
+}
+
+model Account {
+  id                 Int       @id @default(autoincrement())
+  userId             Int
+  user               User      @relation(fields: [userId], references: [id])
+  provider           String
+  providerAccountId  String
+  refresh_token      String?   @db.Text
+  access_token       String?   @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?   @db.Text
+  session_state      String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @default(now())
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id                 Int       @id @default(autoincrement())
+  sessionToken       String    @unique
+  userId             Int
+  user               User      @relation(fields: [userId], references: [id])
+  expires            DateTime  @map("expires")
+
+  @@map(name: "Session")
+}
+
+model VerificationToken {
+  id                 Int       @id @default(autoincrement())
+  identifier         String
+  token              String    @unique
+  expires            DateTime
+
+  @@map(name: "VerificationToken")
+}

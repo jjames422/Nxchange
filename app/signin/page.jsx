@@ -1,12 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { signIn } from "next-auth/react";
 import { Button, Input, Link, Divider, ResizablePanel } from "@nextui-org/react";
 import { AnimatePresence, m, domAnimation, LazyMotion } from "framer-motion";
 import { Icon } from "@iconify/react";
 
 export default function Login() {
-  const [isFormVisible, setIsFormVisible] = React.useState(false);
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await signIn("credentials", { email, password });
+  };
 
   const variants = {
     visible: { opacity: 1, y: 0 },
@@ -35,7 +43,7 @@ export default function Login() {
                   exit="hidden"
                   initial="hidden"
                   variants={variants}
-                  onSubmit={(e) => e.preventDefault()}
+                  onSubmit={handleSubmit}
                 >
                   <Input
                     autoFocus
@@ -43,9 +51,17 @@ export default function Login() {
                     name="email"
                     type="email"
                     variant="bordered"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
-
-                  <Input label="Password" name="password" type="password" variant="bordered" />
+                  <Input
+                    label="Password"
+                    name="password"
+                    type="password"
+                    variant="bordered"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                   <Button color="primary" type="submit">
                     Log In
                   </Button>
@@ -53,11 +69,7 @@ export default function Login() {
                   <Button
                     fullWidth
                     startContent={
-                      <Icon
-                        className="text-default-500"
-                        icon="solar:arrow-left-linear"
-                        width={18}
-                      />
+                      <Icon className="text-default-500" icon="solar:arrow-left-linear" width={18} />
                     }
                     variant="flat"
                     onPress={() => setIsFormVisible(false)}

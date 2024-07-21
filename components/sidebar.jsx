@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from "@nextui-org/button";
 import { AiOutlineGlobal } from 'react-icons/ai';
 import siteConfig from '@/config/site';
+import { motion } from "framer-motion";
 
 const Sidebar = ({ isOpen, onClose }) => {
   return (
@@ -15,9 +16,13 @@ const Sidebar = ({ isOpen, onClose }) => {
         <li className="mb-2"><a href={siteConfig.links.learn}>Learn</a></li>
         <li className="mb-2"><a href={siteConfig.links.company}>Company</a></li>
       </ul>
-      <div className="p-4">
-        <Button as="a" href={siteConfig.links.signup} color="primary" fullWidth>Sign Up</Button>
-        <Button as="a" href={siteConfig.links.signin} color="secondary" fullWidth>Sign In</Button>
+      <div className="p-4 flex space-x-2">
+        <motion.div whileTap={{ scale: 0.95 }}>
+          <Button as="a" href={siteConfig.links.signup} color="primary" fullWidth>Sign Up</Button>
+        </motion.div>
+        <motion.div whileTap={{ scale: 0.95 }}>
+          <Button as="a" href={siteConfig.links.signin} color="secondary" fullWidth>Sign In</Button>
+        </motion.div>
       </div>
       <div className="flex items-center justify-center w-full py-4 mt-4 border-t border-gray-700">
         <AiOutlineGlobal className="mr-2" />

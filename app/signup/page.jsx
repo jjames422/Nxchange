@@ -1,15 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button, Input, Link, Divider } from "@nextui-org/react";
 import { AnimatePresence, m, LazyMotion, domAnimation } from "framer-motion";
 import { Icon } from "@iconify/react";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
 
 export default function SignUp() {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState(false);
+  const [email, setEmail] = useState("");
+  const router = useRouter();
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
@@ -26,6 +31,17 @@ export default function SignUp() {
       setPasswordError(true);
     } else {
       setPasswordError(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (password === confirmPassword) {
+      const hashedPassword = bcrypt.hashSync(password, 10);
+      await prisma.user.create({
+        data: { email, passwordHash: hashedPassword },
+      });
+      router.push("/signin");
     }
   };
 
@@ -55,12 +71,7 @@ export default function SignUp() {
                 exit="hidden"
                 initial="hidden"
                 variants={variants}
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (password !== confirmPassword) {
-                    setPasswordError(true);
-                  }
-                }}
+                onSubmit={handleSubmit}
               >
                 <Input
                   autoFocus
@@ -69,6 +80,8 @@ export default function SignUp() {
                   name="email"
                   type="email"
                   variant="bordered"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
 
                 <Input
@@ -78,6 +91,8 @@ export default function SignUp() {
                   type="password"
                   variant="bordered"
                   onChange={handlePasswordChange}
+                  isInvalid={passwordError}
+                  errorMessage={passwordError ? "Passwords do not match" : ""}
                 />
 
                 <Input
@@ -87,13 +102,11 @@ export default function SignUp() {
                   type="password"
                   variant="bordered"
                   onChange={handleConfirmPasswordChange}
-                  className={passwordError ? "border-danger ring-danger focus:border-danger focus:ring-danger" : ""}
+                  isInvalid={passwordError}
+                  errorMessage={passwordError ? "Passwords do not match" : ""}
                 />
-                {passwordError && (
-                  <p className="text-danger text-xs mt-1">Passwords do not match</p>
-                )}
 
-                <Button color="primary" type="submit">
+                <Button color="primary" type="submit" className="w-full">
                   Sign Up
                 </Button>
                 {orDivider}

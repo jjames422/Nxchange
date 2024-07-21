@@ -13,7 +13,7 @@ export default function HomePage() {
         </CardHeader>
         <CardBody>
           <p className="text-xl text-left mb-4">
-            We're the most trusted place for people and businesses to buy, sell, and use crypto.
+            We&apos;re the most trusted place for people and businesses to buy, sell, and use crypto.
           </p>
           <div className="flex justify-center mb-4">
             <Input
