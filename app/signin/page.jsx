@@ -2,18 +2,32 @@
 
 import React, { useState } from "react";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Button, Input, Link, Divider, ResizablePanel } from "@nextui-org/react";
 import { AnimatePresence, m, domAnimation, LazyMotion } from "framer-motion";
 import { Icon } from "@iconify/react";
 
 export default function Login() {
-  const [isFormVisible, setIsFormVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [error, setError] = useState(null);
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await signIn("credentials", { email, password });
+    const result = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    });
+
+    if (result.error) {
+      setError(result.error);
+    } else {
+      setError(null);
+      router.push("/dashboard");
+    }
   };
 
   const variants = {
@@ -62,6 +76,7 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  {error && <p className="text-red-500">{error}</p>}
                   <Button color="primary" type="submit">
                     Log In
                   </Button>

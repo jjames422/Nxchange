@@ -1,3 +1,4 @@
+// app/api/auth/[...nextauth]/route.js
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
@@ -13,13 +14,29 @@ const authOptions = {
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
-        if (user && bcrypt.compareSync(credentials.password, user.passwordHash)) {
-          return user;
+        console.log("Received credentials:", credentials);
+
+        try {
+          await prisma.$connect();
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
+
+          console.log("User found:", user);
+
+          if (user && bcrypt.compareSync(credentials.password, user.passwordHash)) {
+            console.log("Password match successful");
+            return { id: user.id, email: user.email, name: user.name };
+          } else {
+            console.log("Invalid credentials");
+            return null;
+          }
+        } catch (error) {
+          console.error("Error during authentication:", error);
+          return null;
+        } finally {
+          await prisma.$disconnect();
         }
-        return null;
       },
     }),
   ],
@@ -27,10 +44,17 @@ const authOptions = {
   session: {
     strategy: "jwt",
   },
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async session({ session, token, user }) {
-      session.user.id = user?.id || token.sub;
+    async session({ session, token }) {
+      session.user.id = token.id;
       return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
     },
   },
   pages: {
@@ -40,5 +64,5 @@ const authOptions = {
   },
 };
 
-export { authOptions };
-export default NextAuth(authOptions);
+export const GET = (req, res) => NextAuth(req, res, authOptions);
+export const POST = (req, res) => NextAuth(req, res, authOptions);
