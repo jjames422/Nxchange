@@ -34,7 +34,7 @@ model Wallet {
   address         String             @unique
   balance         Float              @default(0.0)
   createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   user            User               @relation(fields: [userId], references: [id])
   transactions    Transaction[]
 }
@@ -60,19 +60,21 @@ model FiatTransaction {
   status          String             // e.g., "pending", "completed", "failed"
   referenceCode   String?            // For SWIFT transfer reference codes
   createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   user            User               @relation(fields: [userId], references: [id])
 }
 
 model CryptoTransaction {
   id              Int                @id @default(autoincrement())
   userId          Int
-  amount          Float
+  amount          Float              // Amount of cryptocurrency
   currency        String             // e.g., "BTC", "ETH"
   type            String             // e.g., "buy", "sell", "transfer"
   status          String             // e.g., "pending", "completed", "failed"
+  gasFee          Float              // Gas fee for the transaction
+  exchangeFee     Float              // Exchange fee for the transaction
   createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   user            User               @relation(fields: [userId], references: [id])
 }
 
@@ -84,7 +86,7 @@ model SWIFTTransfer {
   status          String             // e.g., "pending", "completed", "failed"
   referenceCode   String?            // SWIFT transfer reference codes
   createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   user            User               @relation(fields: [userId], references: [id])
 }
 
@@ -96,7 +98,7 @@ model BankAccount {
   routingNumber   String
   swiftCode       String
   createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   user            User               @relation(fields: [userId], references: [id])
 }
 

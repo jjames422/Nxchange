@@ -10,14 +10,43 @@ import {
   AiOutlineSwap,
   AiOutlineBank,
 } from "react-icons/ai";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function DashboardPage({
-  user = { firstName: "John", balance: "19.78", totalAssets: "2393.62" },
-}) {
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+};
+
+export default function DashboardPage() {
   const [isModalOpen, setModalOpen] = useState(false);
+  const [user, setUser] = useState({
+    firstName: "Loading...",
+    balance: 0,
+    totalAssets: 0,
+  });
 
   const toggleModal = () => setModalOpen(!isModalOpen);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/user');
+        const data = await response.json();
+        const cryptoBalances = JSON.parse(data.cryptoBalances);
+        const totalCryptoBalance = Object.values(cryptoBalances).reduce((sum, value) => sum + value, 0);
+        const totalAssets = data.fiatBalance + totalCryptoBalance;
+
+        setUser({
+          firstName: data.name,
+          balance: data.fiatBalance,
+          totalAssets,
+        });
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   return (
     <div className="container mx-auto p-4">
@@ -28,9 +57,9 @@ export default function DashboardPage({
         <CardBody>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-3xl font-bold text-primary">${user.balance}</h3>
+              <h3 className="text-3xl font-bold text-primary">{formatCurrency(user.balance)}</h3>
               <p onClick={toggleModal} className="text-sm text-accent cursor-pointer">
-                Total: ${user.totalAssets}
+                Total: {formatCurrency(user.totalAssets)}
               </p>
             </div>
             <div>{/* Graph or additional content here */}</div>
@@ -72,7 +101,7 @@ export default function DashboardPage({
             <h3>Total Assets</h3>
           </ModalHeader>
           <ModalBody>
-            <p>Your total assets in fiat: ${user.totalAssets}</p>
+            <p>Your total assets in fiat: {formatCurrency(user.totalAssets)}</p>
           </ModalBody>
           <ModalFooter>
             <button auto flat color="error" onClick={toggleModal}>
