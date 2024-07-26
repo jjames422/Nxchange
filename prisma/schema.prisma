@@ -28,25 +28,50 @@ model User {
 }
 
 model Wallet {
-  id              Int                @id @default(autoincrement())
-  userId          Int
-  type            String             // e.g., "fiat", "btc", "eth", etc.
-  address         String             @unique
-  balance         Float              @default(0.0)
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  user            User               @relation(fields: [userId], references: [id])
-  transactions    Transaction[]
+  id               Int      @id @default(autoincrement())
+  userId           Int?
+  user             User?    @relation(fields: [userId], references: [id])
+  type             String
+  network          String
+  address          String
+  balance          Float    @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  privateKeyId     Int      @unique
+  privateKey       PrivateKey @relation(fields: [privateKeyId], references: [id])
+  symbol           String
+  transactions     Transaction[] 
+  isExchangeWallet Boolean  @default(false)  // Field to identify exchange wallets
+
+  @@unique([userId, type, network, symbol])
+}
+
+model ExchangeWallet {
+  id         Int      @id @default(autoincrement())
+  type       String   // e.g., BTC, ETH, LTC, MATIC
+  network    String   // e.g., ethereum, bitcoin
+  address    String
+  privateKey String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+}
+
+model PrivateKey {
+  id        Int       @id @default(autoincrement())
+  key       String    @unique
+  wallet    Wallet?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Transaction {
   id              Int                @id @default(autoincrement())
   walletId        Int
-  type            String             // e.g., "deposit", "withdrawal", "transfer", "conversion"
+  type            String
   amount          Float
-  currency        String             // e.g., "USD", "BTC", "ETH"
-  status          String             // e.g., "pending", "completed", "failed"
-  referenceCode   String?            // For SWIFT transfer reference codes
+  currency        String
+  status          String
+  referenceCode   String?
   createdAt       DateTime           @default(now())
   wallet          Wallet             @relation(fields: [walletId], references: [id])
 }
@@ -55,10 +80,14 @@ model FiatTransaction {
   id              Int                @id @default(autoincrement())
   userId          Int
   amount          Float
-  currency        String             // Typically "USD"
-  type            String             // e.g., "deposit", "withdrawal"
-  status          String             // e.g., "pending", "completed", "failed"
-  referenceCode   String?            // For SWIFT transfer reference codes
+  currency        String
+  type            String
+  status          String
+  referenceCode   String?
+  transactionReferenceNumber String?
+  bicSender       String?
+  senderName      String?
+  transactionDate DateTime?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   user            User               @relation(fields: [userId], references: [id])
@@ -67,12 +96,12 @@ model FiatTransaction {
 model CryptoTransaction {
   id              Int                @id @default(autoincrement())
   userId          Int
-  amount          Float              // Amount of cryptocurrency
-  currency        String             // e.g., "BTC", "ETH"
-  type            String             // e.g., "buy", "sell", "transfer"
-  status          String             // e.g., "pending", "completed", "failed"
-  gasFee          Float              // Gas fee for the transaction
-  exchangeFee     Float              // Exchange fee for the transaction
+  amount          Float
+  currency        String
+  type            String
+  status          String
+  gasFee          Float
+  exchangeFee     Float
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   user            User               @relation(fields: [userId], references: [id])
@@ -82,9 +111,9 @@ model SWIFTTransfer {
   id              Int                @id @default(autoincrement())
   userId          Int
   amount          Float
-  currency        String             // Typically "USD"
-  status          String             // e.g., "pending", "completed", "failed"
-  referenceCode   String?            // SWIFT transfer reference codes
+  currency        String
+  status          String
+  referenceCode   String?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   user            User               @relation(fields: [userId], references: [id])
@@ -98,7 +127,7 @@ model BankAccount {
   routingNumber   String
   swiftCode       String
   createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  updatedAt       DateTime           @default(now())
   user            User               @relation(fields: [userId], references: [id])
 }
 
